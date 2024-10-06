@@ -41,12 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'autowash',
-  # all django apps authentication  
-    'allauth',
-'allauth.account',
-'allauth.socialaccount',
-'allauth.socialaccount.providers.google',
-'allauth.socialaccount.providers.microsoft',
 'rest_framework',
 'corsheaders',
 'widget_tweaks',
