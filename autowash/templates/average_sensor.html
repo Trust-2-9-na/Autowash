@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,35 +6,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Average Sensor Data</title>
     <link rel="stylesheet" href="{% static 'css/average_sensor.css' %}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-    <header>
-        <h1>AUTOWASH</h1>
+    <!-- Header with Navigation -->
+    <header class="bg-light py-3 header-container">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">AUTOWASH</h4>
+                <!-- Navigation bar -->
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item">
+                                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'system-status' %}" class="nav-link {% if request.resolver_match.url_name == 'system-status' %}active{% endif %}">System Status</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'average-sensor' %}" class="nav-link {% if request.resolver_match.url_name == 'average-sensor' %}active{% endif %}">View Average Readings</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'sensor-data' %}" class="nav-link {% if request.resolver_match.url_name == 'sensor-data' %}active{% endif %}">Sensor Data</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'sensor-charts' %}" class="nav-link {% if request.resolver_match.url_name == 'sensor-charts' %}active{% endif %}">View Data Visualization</a>
+                            </li>
+                        </ul>
+                        <a href="{% url 'signout' %}" class="btn btn-outline-danger">Sign Out</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>    
 
-        <!-- Navigation bar -->
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
-                <li><a href="{% url 'sensor-charts' %}" class="{% if request.resolver_match.url_name == 'sensor-charts' %}active{% endif %}">View Sensor Charts</a></li>
-                <li><a href="{% url 'average-sensor' %}">View Average Sensor Data</a></li>
-                <li><a href="{% url 'sensor-data' %}">Sensor Data</a></li>
-            </ul>
-        </nav>
-        <div class="sign-out">
-            <a href="{% url 'signout' %}" class="signout-btn">Sign Out</a>
-        </div>
+    <!-- Main Content -->
+    <div class="container mt-4 main-container " style="max-width: 500px;">
+        <h2 class="text-center">Average Sensor Data</h2>
         
-    </header>
-    <div class="container">
-        <h2>Average Sensor Data (Past Hour)</h2>
-        <div class="status-container">
-            <label for="avg_hands_washed">Average Hands Washed:</label>
-            <span id="avg_hands_washed">{{ avg_hands_washed|floatformat:1 }}</span>
-        </div>
-        <div class="status-container">
-            <label for="avg_water_dispensed">Average Water Dispensed (ml):</label>
-            <span id="avg_water_dispensed">{{ avg_water_dispensed|floatformat:1 }}</span>
+        <!-- Statistics Table -->
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-bordered table-striped table-responsive">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Metric</th>
+                            <th scope="col">Hourly Average</th>
+                            <th scope="col">Daily Total (Last 24 Hours)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Hands Washed</td>
+                            <td>{{ avg_hands_washed|floatformat:1 }}</td>
+                            <td>{{ total_hands_washed }}</td>
+                        </tr>
+                        <tr>
+                            <td>Water Dispensed (ml)</td>
+                            <td>{{ avg_water_dispensed|floatformat:1 }} ml</td>
+                            <td>{{ total_water_dispensed_ml|floatformat:1 }} ml</td>
+                        </tr>
+                        <tr>
+                            <td>Water Dispensed (liters)</td>
+                            <td>-</td> <!-- Not applicable for hourly average -->
+                            <td>{{ total_water_dispensed_liters|floatformat:2 }} liters</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

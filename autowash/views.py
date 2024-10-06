@@ -23,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 import logging
 from django.utils import timezone
 import json
-from django.db.models import Avg
+from django.db.models import Avg, Sum
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -34,69 +34,103 @@ from .serializers import SensorDataSerializer, SystemSettingsSerializer, SystemS
 from datetime import timedelta
 from rest_framework import status
 from rest_framework.decorators import api_view
-
-
+from requests.exceptions import RequestException
+from django.conf import settings
+from .forms import CustomAuthenticationForm
+from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)
-
 class UnifiedAPIView(APIView):
+    http_method_names = ['get', 'post']
+
     def get(self, request, *args, **kwargs):
-        # Retrieve data from all models
+        # Retrieve and serialize all sensor data and system status
         sensor_data = SensorData.objects.all()
         system_status = SystemStatus.objects.all()
-        system_settings = SystemSettings.objects.all()
 
-        # Serialize the data
         sensor_data_serializer = SensorDataSerializer(sensor_data, many=True)
         system_status_serializer = SystemStatusSerializer(system_status, many=True)
-        system_settings_serializer = SystemSettingsSerializer(system_settings, many=True)
 
-        # Combine the serialized data
         combined_data = {
             'sensor_data': sensor_data_serializer.data,
             'system_status': system_status_serializer.data,
-            'system_settings': system_settings_serializer.data,
         }
 
         return Response(combined_data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        # Handle posting data to SensorData and SystemStatus
-        sensor_data_serializer = SensorDataSerializer(data=request.data.get('sensor_data'))
-        system_status_serializer = SystemStatusSerializer(data=request.data.get('system_status'))
+        # Handle sensor data and system status in POST request
+        sensor_data = request.data.get('sensor_data')
+        system_status = request.data.get('system_status')
 
-        if sensor_data_serializer.is_valid():
-            sensor_data_serializer.save()
-        else:
-            return Response(sensor_data_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if sensor_data:
+            sensor_data_serializer = SensorDataSerializer(data=sensor_data)
+            if sensor_data_serializer.is_valid():
+                sensor_data_serializer.save()
+            else:
+                return Response(sensor_data_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if system_status_serializer.is_valid():
-            system_status_serializer.save()
-        else:
-            return Response(system_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if system_status:
+            system_status_serializer = SystemStatusSerializer(data=system_status)
+            if system_status_serializer.is_valid():
+                system_status_serializer.save()
+            else:
+                return Response(system_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'message': 'Data saved successfully'}, status=status.HTTP_201_CREATED)
 
-    def put(self, request, *args, **kwargs):
-        # Handle updating system settings
+
+DISPENSING_TIMES = [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000]
+SPEED_VALUES = [0, 64, 85, 100, 120, 128, 160, 190, 220, 240, 255]
+@csrf_exempt
+def system_settings_control(request):
+    if request.method == "GET":
+        # Fetch and return the current system settings
         settings = SystemSettings.objects.first()
         if settings is None:
-            return Response({"detail": "No settings found to update."}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({"error": "No system settings found."}, status=404)
 
-        serializer = SystemSettingsSerializer(settings, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            # Send the index values to the hardware
-            speed_index = serializer.validated_data.get('flow_speed')
-            time_index = serializer.validated_data.get('duration')
-            send_settings_to_hardware(speed_index, time_index)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Serialize the current settings
+        system_settings_serializer = SystemSettingsSerializer(settings)
+        return JsonResponse(system_settings_serializer.data, status=200)
 
-def send_settings_to_hardware(speed_index, time_index):
-    # Code to send the index values to the hardware
-    # This could be through a serial connection, HTTP request, etc.
-    pass
+    elif request.method == "POST":
+        # Update the system settings based on the client's request
+        try:
+            data = json.loads(request.body)
+
+            settings = SystemSettings.objects.first()
+            if settings is None:
+                return JsonResponse({"error": "No system settings found."}, status=404)
+
+            # Extract the new settings from the request
+            dispensing_time_index = data.get("dispensing_time_index")
+            speed_value_index = data.get("speed_value_index")
+
+            # Validate the indices
+            if dispensing_time_index is not None and speed_value_index is not None:
+                # Validate indices against the predefined dispensing times and speed values
+                if (0 <= dispensing_time_index < len(DISPENSING_TIMES)) and (0 <= speed_value_index < len(SPEED_VALUES)):
+                    # Update the system settings with valid indices
+                    settings.dispensing_time = dispensing_time_index
+                    settings.speed_value = speed_value_index
+                    settings.save()
+
+                    # Return the updated settings
+                    return JsonResponse({
+                        "dispensing_time_index": settings.dispensing_time,
+                        "speed_value_index": settings.speed_value,
+                        "dispensing_time": DISPENSING_TIMES[dispensing_time_index],
+                        "speed_value": SPEED_VALUES[speed_value_index]
+                    }, status=200)
+                else:
+                    return JsonResponse({"error": "Invalid index for dispensing time or speed."}, status=400)
+            else:
+                return JsonResponse({"error": "Missing required parameters."}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Bad request"}, status=400)
+
 
 
 class SensorDataViewSet(viewsets.ModelViewSet):
@@ -133,43 +167,8 @@ class SensorDataList(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+ 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET'])
-def get_current_settings(request):
-    """
-    Retrieve the current system settings.
-    """
-    try:
-        settings = SystemSettings.objects.first()
-        if settings is not None:
-            serializer = SystemSettingsSerializer(settings)
-            return Response(serializer.data)
-        else:
-            return Response({"detail": "No settings found."}, status=status.HTTP_404_NOT_FOUND)
-    except SystemSettings.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-@api_view(['POST'])
-def update_settings(request):
-    """
-    Update the system settings.
-    """
-    settings = SystemSettings.objects.first()
-    if settings is None:
-        return Response({"detail": "No settings found to update."}, status=status.HTTP_404_NOT_FOUND)
-    
-    serializer = SystemSettingsSerializer(data=request.data)
-    if serializer.is_valid():
-        # Validate and update flow speed and duration using model methods
-        settings.set_flow_speed(serializer.validated_data['flow_speed'])
-        settings.set_duration(serializer.validated_data['duration'])
-        settings.save()
-        settings.apply_settings()  # Send settings to the hardware
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 class SystemStatusList(APIView):
     def get(self, request, *args, **kwargs):
@@ -224,8 +223,8 @@ class UserProfileList(APIView):
 
 class CustomLoginView(LoginView):
     template_name = 'autowash/login.html'
-    redirect_authenticated_user = True
-
+    redirect_authenticated_user = True 
+    form_class = CustomAuthenticationForm
 
 def calculate_hourly_averages():
     now = timezone.now()
@@ -248,12 +247,28 @@ def calculate_hourly_averages():
     return avg_hands_washed, avg_water_dispensed
 
 
+# Updated view function that includes both daily totals and hourly averages
 def average_sensor_view(request):
+    # Calculate hourly averages
     avg_hands_washed, avg_water_dispensed = calculate_hourly_averages()
     
+    # Calculate daily totals (last 24 hours)
+    now = timezone.now()
+    last_24_hours = now - timedelta(hours=24)
+    
+    sensor_data_last_24h = SensorData.objects.filter(timestamp__gte=last_24_hours)
+    
+    total_hands_washed = sensor_data_last_24h.aggregate(Sum('hands_washed'))['hands_washed__sum'] or 0
+    total_water_dispensed_ml = sensor_data_last_24h.aggregate(Sum('water_dispensed_ml'))['water_dispensed_ml__sum'] or 0.0
+    total_water_dispensed_liters = total_water_dispensed_ml / 1000.0  # Convert ml to liters
+
+    # Pass both hourly averages and daily totals into the context
     context = {
         'avg_hands_washed': avg_hands_washed,
         'avg_water_dispensed': avg_water_dispensed,
+        'total_hands_washed': total_hands_washed,
+        'total_water_dispensed_ml': total_water_dispensed_ml,
+        'total_water_dispensed_liters': total_water_dispensed_liters,
     }
     
     return render(request, 'average_sensor.html', context)
@@ -313,80 +328,87 @@ import requests
 
 @login_required
 def system_settings_view(request):
+    # Get the first SystemSettings instance or create one if it doesn't exist
+    settings_instance, created = SystemSettings.objects.get_or_create(pk=1)
+
     if request.method == 'GET':
-        settings = SystemSettings.objects.first()
-        if settings:
-            # Convert duration from milliseconds to seconds for display
-            duration_seconds = settings.duration / 1000 if settings.duration else 0
-            
-            serializer = SystemSettingsSerializer(settings)
+        # Serialize the settings instance
+        serializer = SystemSettingsSerializer(settings_instance)
+        
+        # Prepare context data for rendering
+        context = {
+            'settings': serializer.data,
+            'dispensing_times': [{'ms': ms, 'sec': ms // 1000} for ms in settings.DISPENSING_TIMES],
+            'speed_values': settings.SPEED_VALUES,
+            'selected_speed_value': settings_instance.speed_value,
+        }
+        return render(request, 'system_settings.html', context)
+
+    elif request.method == 'POST':
+        # Deserialize and validate the POST data
+        dispensing_time_index = int(request.POST.get('dispensing_time_index', 0))
+        speed_value_index = int(request.POST.get('speed_value_index', 0))
+        
+        # Map indices to actual values
+        dispensing_time = settings.DISPENSING_TIMES[dispensing_time_index]
+        speed_value = settings.SPEED_VALUES[speed_value_index]
+        
+        data = {
+            'dispensing_time': dispensing_time,
+            'speed_value': speed_value
+        }
+        
+        serializer = SystemSettingsSerializer(settings_instance, data=data)
+
+        if serializer.is_valid():
+            # Save the updated settings instance
+            serializer.save()
+            # Add a success message
+            messages.success(request, 'Settings updated successfully!')
+            # Redirect back to the settings view after a successful update
+            return redirect('system-settings')
+        else:
+            # If validation fails, re-render the form with errors
             context = {
                 'settings': serializer.data,
-                'flow_speeds': [0, 64, 85, 100, 120, 128, 160, 190, 220, 240, 255],
-                'durations': [{'ms': 5000, 'sec': 5}, {'ms': 10000, 'sec': 10}, {'ms': 15000, 'sec': 15}, {'ms': 20000, 'sec': 20}, {'ms': 25000, 'sec': 25}, {'ms': 30000, 'sec': 30}, {'ms': 35000, 'sec': 35}, {'ms': 40000, 'sec': 40}],  # Durations in milliseconds and seconds
-                'duration_seconds': duration_seconds
+                'dispensing_times': [{'ms': ms, 'sec': ms // 1000} for ms in settings.DISPENSING_TIMES],
+                'speed_values': settings.SPEED_VALUES,
+                'selected_speed_value': settings_instance.speed_value,
+                'errors': serializer.errors,
             }
             return render(request, 'system_settings.html', context)
-        else:
-            return render(request, 'system_settings.html', {'error': 'No settings found.'})
-    elif request.method == 'POST':
-        settings = SystemSettings.objects.first()
-        if settings is None:
-            return JsonResponse({"detail": "No settings found to update."}, status=status.HTTP_404_NOT_FOUND)
-        
-        # Convert duration from seconds to milliseconds before saving
-        duration_in_milliseconds = int(request.POST.get('duration')) * 1000
-        request.POST = request.POST.copy()
-        request.POST['duration'] = duration_in_milliseconds
 
-        serializer = SystemSettingsSerializer(data=request.POST)
-        if serializer.is_valid():
-            settings.set_flow_speed(serializer.validated_data['flow_speed'])
-            settings.set_duration(serializer.validated_data['duration'])
-            settings.save()
-            settings.apply_settings()
-            messages.success(request, "Settings updated successfully.")
-            return redirect('system_settings_view')
-        else:
-            messages.error(request, "Failed to update settings. Please correct the errors below.")
-            return render(request, 'system_settings.html', {
-                'settings': serializer.data,
-                'flow_speeds': [0, 64, 85, 100, 120, 128, 160, 190, 220, 240, 255],
-                'durations': [{'ms': 5000, 'sec': 5}, {'ms': 10000, 'sec': 10}, {'ms': 15000, 'sec': 15}, {'ms': 20000, 'sec': 20}, {'ms': 25000, 'sec': 25}, {'ms': 30000, 'sec': 30}, {'ms': 35000, 'sec': 35}, {'ms': 40000, 'sec': 40}],  # Durations in milliseconds and seconds
-                'errors': serializer.errors
-            })
+    # Return a 405 response for any other HTTP methods
+    return JsonResponse({"detail": "Invalid method."}, status=405)
 
 @login_required
 def sensor_data(request):
     sensor_data = SensorData.objects.all()
     return render(request, 'sensor_data.html', {'sensor_data': sensor_data})
+    
 
+logger = logging.getLogger(__name__)
 @login_required
 def system_status(request):
     try:
-        system_status = SystemStatus.objects.get(user=request.user)
+        system_status = SystemStatus.objects.latest('id')
+        logger.debug(f"Fetched System Status: {system_status}")
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            data = {
+                'water_level': system_status.water_level,
+                'ultrasonic_distance_cm': system_status.ultrasonic_distance_cm,
+                'operational_state': 'Normal',
+                'anomaly_detected': system_status.anomaly_detected,
+                'anomaly_description': system_status.anomaly_description,
+            }
+            return JsonResponse(data)
+
+        return render(request, 'system_status.html', {'system_status': system_status})
+
     except SystemStatus.DoesNotExist:
-        system_status = SystemStatus.objects.create(
-            user=request.user,
-            water_level =0.0,  # Updated field
-            ultrasonic_distance_cm=0.0,  # Added field
-            operational_state="Normal",
-            anomaly_detected=False,
-            anomaly_description=""
-        )
-        messages.info(request, 'Default system status has been created for your account.')
-
-    if request.method == 'POST':
-        form = SystemStatusForm(request.POST, instance=system_status)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'System status updated successfully.')
-            return redirect('system-status')
-    else:
-        form = SystemStatusForm(instance=system_status)
-
-    return render(request, 'system_status.html', {'form': form, 'system_status': system_status})
-
+        messages.error(request, 'No system status available.')
+        return render(request, 'system_status.html', {'system_status': None})
 
 @login_required
 def user_profile(request):
@@ -441,10 +463,16 @@ def signup(request):
         form = SignupForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Account created successfully! Please login.')
             return redirect('login')
+        else:
+            # You may want to display these errors on your form
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = SignupForm()
+
     return render(request, 'signup.html', {'form': form})
+
 @login_required
 def change_account(request):
     if request.method == 'POST':
@@ -458,6 +486,7 @@ def about_land(request):
     return render(request, 'about_land.html')
 def help_land(request):
     return render(request, 'help_land.html')
+
 def contact_land(request):
     if request.method == "POST":
         name = request.POST.get('name')

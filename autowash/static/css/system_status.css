@@ -1,182 +1,99 @@
-/* Basic reset and body styling */
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-}
-
-/* Header styling */
+/* Style header */
 header {
-    width: 100%;
-    height: 50px;
-    background: linear-gradient(to right, #00f, #0ff, #00f);
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Align items between title and navigation */
-    padding: 0 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-header h1 {
-    font-size: 1.5em;
-    color: white;
-    margin: 0;
-    padding: 0;
-}
-
-/* Navigation bar styling */
-nav {
-    display: flex;
-    justify-content: center;
-    flex-grow: 1;
-    margin-right: 20px;
-}
-
-nav ul {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-nav ul li {
-    margin-right: 20px;
-}
-
-nav ul li a {
-    text-decoration: none;
-    color: white;
-    font-size: 1em;
-    padding: 5px 10px;
-    border-radius: 5px;
-    transition: color 0.3s ease, background-color 0.3s ease;
-}
-
-nav ul li a:hover {
-    color: blue;
-}
-
-nav ul li a.active {
     background-color: white;
+    color: black;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h4 {
+    font-weight: bold;
+    margin: 0;
+}
+
+/* Style the navbar */
+.navbar {
+    background-color: white;
+}
+
+.navbar .nav-link, .navbar .navbar-brand {
     color: black;
 }
 
-/* Sign Out button styling */
-.sign-out {
-    margin-left: auto;
+.navbar .nav-link.active {
+    font-weight: bold;
 }
 
-.signout-btn {
-    text-decoration: none;
+.navbar .btn-outline-danger {
+    padding: 3px 8px;  /* Reduced padding for smaller button size */
+    font-size: 0.875rem;  /* Smaller font size */
+    border-width: 1px;  /* Thinner border */
+}
+
+.navbar .btn-outline-danger:hover {
+    background-color: blue;
     color: white;
-    font-size: 1em;
-    background-color: transparent;
-    border: 1px solid white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.signout-btn:hover {
-    background-color: black; /* Change to your desired hover color */
-    color: white; /* Ensure text is readable on hover */
-}
-
-/* Container styling */
+/* Main content styling */
 .container {
-    width: 80%;
-    margin: 20px auto;
-    padding: 20px;
-    background: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+    margin-top: 20px;
 }
 
-h2 {
-    text-align: center;
-    color: #333;
-}
-
-/* Table styling */
 .table-wrapper {
-    overflow-x: auto;
+    margin-top: 20px;
 }
 
-.status-table {
+.table {
     width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 1rem;
+    color: #212529;
 }
 
-.status-table th,
-.status-table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+.table th,
+.table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
 }
 
-.status-table th {
-    background-color: #f4f4f4;
-    cursor: pointer;
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
 }
 
-.status-table tr:nth-child(even) {
-    background-color: #f9f9f9;
+.table tbody + tbody {
+    border-top: 2px solid #dee2e6;
 }
 
-.status-table tr:hover {
-    background-color: #f1f1f1;
+.table .thead-light th {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
 }
 
 /* Button styling */
-button {
-    display: inline-block;
-    padding: 10px 20px;
-    font-size: 1em;
-    color: white;
-    background-color: #007bff; /* Primary color */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-top: 20px; /* Ensure button is not overlapping other elements */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
 }
 
-button:hover {
-    background-color: #0056b3; /* Darker shade for hover effect */
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
 }
 
-/* Messages styling */
-.messages {
-    margin-bottom: 20px;
-    width: 80%;
+/* Message styling */
+.alert-info .message {
+    color: #007bff; /* Blue color for messages */
 }
 
-.messages div {
-    padding: 10px;
-    border-radius: 5px;
-    margin: 10px 0;
-}
-
-.messages .success {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.messages .error {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-/* Footer styling */
-footer {
-    background-color: white;
-    color: black;
-    text-align: center;
-    padding: 10px 0;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .navbar-expand-lg .navbar-collapse {
+        flex-direction: column;
+        align-items: start;
+    }
+    .btn {
+        width: 100%; /* Make buttons full-width on small screens */
+        margin-bottom: 5px;
+    }
 }

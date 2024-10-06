@@ -4,69 +4,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help</title>
-    <link rel="stylesheet" href="{% static 'css/help.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Contact Us</title>
+    <link rel="stylesheet" href="{% static 'css/contact.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+          .nav-link.btn {
+    padding: 10px 20px; /* Adjust padding for better spacing */
+    font-size: 1rem; /* Adjust font size */
+    border-radius: 5px; /* Rounded corners */
+}
+
+.nav-link.btn:hover {
+    opacity: 0.9; /* Slightly reduce opacity on hover */
+}
+
+    </style>
 </head>
 <body>
-    <header>
-        <h1>AUTOWASH</h1>
-
-        <!-- Navigation bar -->
-        <nav>
-            <ul> 
-                <li><a href="{% url 'login' %}" class="login-btn">Login</a></li>
-              <li>  <a href="{% url 'signup' %}" class="signup-btn">Sign Up</a> </li>
-            </ul>
-        </nav>
+    <header class="bg-light py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">AUTOWASH</h4>
+                <!-- Navigation bar -->
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item">
+                                <a href="{% url 'login' %}" class="nav-link btn btn-primary mx-2">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'signup' %}" class="nav-link btn btn-success mx-2">Signup</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
     </header>
 
-    <div class="help-page">
-    <div class="help-container">
-        <h1>Help</h1>
-        <p>Welcome to the help section. Here you can find answers to frequently asked questions and get assistance with any issues you might be facing.</p>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h2 class="text-center mb-4">Contact Us</h2>
 
-        <h2>Frequently Asked Questions</h2>
-        <div class="faq">
-            <h3>Question 1: How do I contact support?</h3>
-            <p>Answer: You can contact support via email at tnachokwe@gmail.com or call us on 0973487055.</p>
-
-            <h3>Question 2: How do I reset my password?</h3>
-            <p>Answer: To reset your password, go to the login page and click on "Forgot Password". Follow the instructions to reset your password.</p>
-
-            <h3>Question 3: How do I update my profile information?</h3>
-            <p>Answer: To update your profile information, go to your profile page and click on "Edit Profile". Make the necessary changes and save them.</p>
+                <!-- Messages Block -->
+                {% if messages %}
+                    <div class="alert alert-info">
+                        {% for message in messages %}
+                            <div class="alert {{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <form method="POST" action="{% url 'contact' %}">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <label for="name" class="col-sm-2 col-form-label">Name:</label>
+                        <div class="col-sm-10">
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="email" class="col-sm-2 col-form-label">Email:</label>
+                        <div class="col-sm-10">
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="message" class="col-sm-2 col-form-label">Message:</label>
+                        <div class="col-sm-10">
+                            <textarea id="message" name="message" class="form-control" rows="5" required></textarea>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-10 offset-sm-2">
+                            <button type="submit" class="btn btn-primary btn-sm">Send</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <h2>Contact Support</h2>
-        <p>If you need further assistance, please contact our support team:</p>
-        <ul class="contact-icons">
-            <li>
-                <a href="mailto:tnachokwe@gmail.com" title="Email">
-                    <i class="fas fa-envelope"></i>
-                    <span>Email</span>
-                </a>
-            </li>
-            <li>
-                <a href="tel:+260973487055" title="Phone">
-                    <i class="fas fa-phone"></i>
-                    <span>Phone</span>
-                </a>
-            </li>
-            <li>
-                <a href="https://wa.me/260761220398" title="WhatsApp">
-                    <i class="fab fa-whatsapp"></i>
-                    <span>WhatsApp</span>
-                </a>
-            </li>
-            <li>
-                <a href="https://www.facebook.com/trust.nachokwe.568/" title="Facebook">
-                    <i class="fab fa-facebook"></i>
-                    <span>Facebook</span>
-                </a>
-            </li>
-        </ul>
     </div>
-</div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-auto">
+        <div class="container text-center">
+            <p>&copy; 2024 AUTOWASH. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

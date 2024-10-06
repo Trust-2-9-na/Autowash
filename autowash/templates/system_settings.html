@@ -6,136 +6,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Settings</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/system_settings.css' %}">
 </head>
 <body>
-    <header>
-        <h1>AUTOWASH</h1>
-        <!-- Navigation bar -->
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
-                <li><a href="{% url 'system-status' %}" class="{% if request.resolver_match.url_name == 'system-status' %}active{% endif %}">System Status</a></li>
-                <li><a href="{% url 'system_settings' %}" class="{% if request.resolver_match.url_name == 'system_settings' %}active{% endif %}">System Settings</a></li>
-                <li><a href="{% url 'sensor-data' %}" class="{% if request.resolver_match.url_name == 'sensor-data' %}active{% endif %}">Sensor Data</a></li>
-                <li><a href="{% url 'user-profile' %}" class="{% if request.resolver_match.url_name == 'user-profile' %}active{% endif %}">User Profile</a></li>
-            </ul>
-        </nav>
-        <!-- Sign Out Button -->
-        <div class="sign-out">
-            <a href="{% url 'signout' %}" class="signout-btn">Sign Out</a>
+    <header class="bg-light py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">AUTOWASH</h4>
+                <!-- Navigation bar -->
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item">
+                                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'system-status' %}" class="nav-link {% if request.resolver_match.url_name == 'system-status' %}active{% endif %}">System Status</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'system-settings' %}" class="nav-link {% if request.resolver_match.url_name == 'system-settings' %}active{% endif %}">System Settings</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'sensor-data' %}" class="nav-link {% if request.resolver_match.url_name == 'sensor-data' %}active{% endif %}">Sensor Data</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'user-profile' %}" class="nav-link {% if request.resolver_match.url_name == 'user-profile' %}active{% endif %}">User Profile</a>
+                            </li>
+                        </ul>
+                        <a href="{% url 'signout' %}" class="btn btn-outline-danger">Sign Out</a>
+                    </div>
+                </nav>
+            </div>
         </div>
     </header>
-    
-    <!-- Display messages -->
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <div class="message {{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
 
-    <div id="system-settings" class="section">
+    <div class="container mt-4">
         <h2>System Settings</h2>
+        {% if messages %}
+            <div class="alert alert-info">
+                {% for message in messages %}
+                    <div class="message">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
         <form id="systemSettingsForm" method="post">
             {% csrf_token %}
-            
-            <!-- Table for system settings -->
-            <div class="table-wrapper">
-                <table class="settings-table">
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Flow Speed</td>
-                            <td>
-                                <select id="id_flow_speed" name="flow_speed">
-                                    {% for speed in flow_speeds %}
-                                        <option value="{{ speed }}" {% if settings.flow_speed == speed %}selected{% endif %}>{{ speed }}</option>
-                                    {% endfor %}
-                                </select>
-                                <span id="flowSpeedValue">{{ settings.flow_speed }}</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Duration (seconds)</td>
-                            <td>
-                                <select id="id_duration" name="duration">
-                                    {% for duration in durations %}
-                                        <option value="{{ duration.ms }}" {% if settings.duration == duration.ms %}selected{% endif %}>{{ duration.sec }}</option>
-                                    {% endfor %}
-                                </select>
-                                <span id="durationValue">{{ duration_seconds }}</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="form-group">
+                <label for="dispensing_time_index">Dispensing Time Index:</label>
+                <select id="dispensing_time_index" name="dispensing_time_index" class="form-control">
+                    {% for time in dispensing_times %}
+                        <option value="{{ forloop.counter0 }}" {% if settings.dispensing_time == time.ms %}selected{% endif %}>{{ time.sec }} seconds</option>
+                    {% endfor %}
+                </select>
             </div>
-            
-            <div class="center-button">
-                <button type="submit">Save Settings</button>
+            <div class="form-group">
+                <label for="speed_value_index">Speed Value Index:</label>
+                <select id="speed_value_index" name="speed_value_index" class="form-control">
+                    {% for value in speed_values %}
+                        <option value="{{ forloop.counter0 }}" {% if settings.speed_value == value %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
             </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
         </form>
+        {% if errors %}
+            <div class="alert alert-danger mt-3">
+                <ul>
+                    {% for field, error_list in errors.items %}
+                        {% for error in error_list %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
     </div>
 
-    <footer id="index">
-        <!-- Your footer content here -->
-    </footer>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Update display values for the flow speed input
-            const flowSpeedInput = document.getElementById("id_flow_speed");
-            const flowSpeedValue = document.getElementById("flowSpeedValue");
-            if (flowSpeedInput && flowSpeedValue) {
-                flowSpeedValue.textContent = flowSpeedInput.value; // Set initial value
-                flowSpeedInput.addEventListener("input", function() {
-                    flowSpeedValue.textContent = flowSpeedInput.value;
-                });
-            }
-
-            // Update display values for the duration input
-            const durationInput = document.getElementById("id_duration");
-            const durationValue = document.getElementById("durationValue");
-            if (durationInput && durationValue) {
-                durationValue.textContent = durationInput.options[durationInput.selectedIndex].text;
-                durationInput.addEventListener("change", function() {
-                    durationValue.textContent = durationInput.options[durationInput.selectedIndex].text;
-                });
-            }
-
-            // Handle form submission via AJAX
-            const form = document.getElementById("systemSettingsForm");
-            form.addEventListener("submit", function(event) {
-                event.preventDefault();
-                const formData = new FormData(form);
-
-                fetch("{% url 'update_settings' %}", {
-                    method: "POST",
-                    body: formData,
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.detail) {
-                        alert(data.detail);
-                    } else {
-                        alert("Settings updated successfully.");
-                    }
-                })
-                .catch(error => {
-                    console.error("Error updating settings:", error);
-                    alert("An error occurred while updating settings.");
-                });
-            });
-        });
-    </script>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

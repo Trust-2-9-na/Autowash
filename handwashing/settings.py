@@ -49,8 +49,32 @@ INSTALLED_APPS = [
 'allauth.socialaccount.providers.microsoft',
 'rest_framework',
 'corsheaders',
+'widget_tweaks',
  
 ]
+
+# settings.py
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+CORS_ALLOW_ALL_ORIGINS = True 
+# or use CORS_ALLOWED_ORIGIN_REGEXES for more flexible patterns
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.example\.com$",
+]
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -61,7 +85,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
@@ -181,6 +204,10 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+
+
+DISPENSING_TIMES = [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000]
+SPEED_VALUES = [0, 64, 85, 100, 120, 128, 160, 190, 220, 240, 255]
 
 
 

@@ -1,277 +1,312 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor Data Visualization</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+     <link rel="stylesheet" href="{% static 'css/responsive.css'%}">
     <link rel="stylesheet" href="{% static 'css/sensor_charts.css' %}">
 </head>
 <body>
-    <header>
-        <h1>AUTOWASH</h1>
-
-        <!-- Navigation bar -->
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
-                <li><a href="{% url 'sensor-charts' %}" class="{% if request.resolver_match.url_name == 'sensor-charts' %}active{% endif %}">View Sensor Charts</a></li>
-                <li><a href="{% url 'average-sensor' %}">View Average Sensor Data</a></li>               
-                <li><a href="{% url 'sensor-data' %}">Sensor Data</a></li>
-            </ul>
-        </nav>
-        <div class="sign-out">
-            <a href="{% url 'signout' %}" class="signout-btn">Sign Out</a>
+  <!-- Header with Navigation -->
+  <header class="bg-light py-3">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">AUTOWASH</h4>
+            <!-- Navigation bar -->
+            <nav class="navbar navbar-expand-lg navbar-light">
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'system-status' %}" class="nav-link {% if request.resolver_match.url_name == 'system-status' %}active{% endif %}">System Status</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'average-sensor' %}" class="nav-link {% if request.resolver_match.url_name == 'average-sensor' %}active{% endif %}">View Average Readings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'sensor-data' %}" class="nav-link {% if request.resolver_match.url_name == 'sensor-data' %}active{% endif %}">Sensor Data</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'sensor-charts' %}" class="nav-link {% if request.resolver_match.url_name == 'sensor-charts' %}active{% endif %}">View Data Visualization</a>
+                        </li>
+                    </ul>
+                    <a href="{% url 'signout' %}" class="btn btn-outline-danger">Sign Out</a>
+                </div>
+            </nav>
         </div>
-    </header>
-    <div id="content">
-        <h1>Sensor Data Visualization</h1>
-        <div id="charts">
-            <div id="hands-washed-line" class="chart">
-                <h2>Hands Washed Over Time</h2>
-                <svg></svg>
+    </div>
+</header>
+
+    <div class="container my-4">
+        <h1 class="mb-4">Sensor Data Visualization</h1>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div id="hands-washed-line" class="chart">
+                    <h2>Hands Washed Over Time</h2>
+                    <svg></svg>
+                </div>
             </div>
-            <div id="water-dispensed-line" class="chart">
-                <h2>Water Dispensed Over Time</h2>
-                <svg></svg>
+            <div class="col-md-6 mb-4">
+                <div id="water-dispensed-line" class="chart">
+                    <h2>Water Dispensed Over Time</h2>
+                    <svg></svg>
+                </div>
             </div>
-            <div id="hands-washed-histogram" class="chart">
-                <h2>Histogram of Hands Washed</h2>
-                <svg></svg>
+            <div class="col-md-6 mb-4">
+                <div id="hands-washed-histogram" class="chart">
+                    <h2>Histogram of Hands Washed</h2>
+                    <svg></svg>
+                </div>
             </div>
-            <div id="water-dispensed-histogram" class="chart">
-                <h2>Histogram of Water Dispensed</h2>
-                <svg></svg>
+            <div class="col-md-6 mb-4">
+                <div id="water-dispensed-histogram" class="chart">
+                    <h2>Histogram of Water Dispensed</h2>
+                    <svg></svg>
+                </div>
             </div>
         </div>
     </div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="{% static 'sensor_charts.js' %}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Parse JSON data passed from Django
-            const sensorData = JSON.parse('{{ sensor_data_json|escapejs }}');
-            const systemSettingsData = JSON.parse('{{ system_settings_json|escapejs }}');
+      document.addEventListener('DOMContentLoaded', function() {
+    // Parse JSON data passed from Django
+    const sensorData = JSON.parse('{{ sensor_data_json|escapejs }}');
+    const systemSettingsData = JSON.parse('{{ system_settings_json|escapejs }}');
 
-            // Set up dimensions
-            const margin = {top: 20, right: 30, bottom: 50, left: 60},
-                  width = 600 - margin.left - margin.right,
-                  height = 300 - margin.top - margin.bottom;
+    // Set up dimensions
+    const margin = {top: 20, right: 30, bottom: 50, left: 60},
+          width = 600 - margin.left - margin.right,
+          height = 300 - margin.top - margin.bottom;
 
-            // Convert timestamps to Date objects
-            sensorData.forEach(d => {
-                d.timestamp = new Date(d.timestamp);
-            });
+    // Convert timestamps to Date objects
+    sensorData.forEach(d => {
+        d.timestamp = new Date(d.timestamp);
+    });
 
-            // Extract data for charts
-            const handsWashedData = sensorData.map(d => d.hands_washed);
-            const waterDispensedData = sensorData.map(d => d.water_dispensed_ml);
-            const waterFlowSpeeds = systemSettingsData.map(d => d.water_flow_speed);
-            const timestamps = sensorData.map(d => d.timestamp);
+    // Extract data for charts
+    const handsWashedData = sensorData.map(d => d.hands_washed);
+    const waterDispensedData = sensorData.map(d => d.water_dispensed_ml);
+    const timestamps = sensorData.map(d => d.timestamp);
 
-            // Line Chart for Hands Washed
-            const xScaleLine = d3.scaleTime()
-                .domain(d3.extent(timestamps))
-                .range([0, width]);
+    // Line Chart for Hands Washed
+    const xScaleLine = d3.scaleTime()
+        .domain(d3.extent(timestamps))
+        .range([0, width]);
 
-            const yScaleLineHandsWashed = d3.scaleLinear()
-                .domain([0, d3.max(handsWashedData)])
-                .range([height, 0]);
+    const yScaleLineHandsWashed = d3.scaleLinear()
+        .domain([0, d3.max(handsWashedData)])
+        .range([height, 0]);
 
-            const lineHandsWashed = d3.line()
-                .x((d, i) => xScaleLine(timestamps[i]))
-                .y(d => yScaleLineHandsWashed(d));
+    const lineHandsWashed = d3.line()
+        .x((d, i) => xScaleLine(timestamps[i]))
+        .y(d => yScaleLineHandsWashed(d));
 
-            const svgLineHandsWashed = d3.select("#hands-washed-line svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+    const svgLineHandsWashed = d3.select("#hands-washed-line svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            svgLineHandsWashed.append("path")
-                .datum(handsWashedData)
-                .attr("class", "line")
-                .attr("d", lineHandsWashed)
-                .style("stroke", "steelblue");
+    svgLineHandsWashed.append("path")
+        .datum(handsWashedData)
+        .attr("class", "line-hands-washed")  // Added class for styling
+        .attr("d", lineHandsWashed);
 
-            svgLineHandsWashed.append("g")
-                .attr("class", "x axis")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScaleLine)
-                    .tickFormat(d3.timeFormat("%a %I:%M %p"))  // Day and Time format
-                    .ticks(5));
+    svgLineHandsWashed.append("g")
+        .attr("class", "x axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScaleLine)
+            .tickFormat(d3.timeFormat("%a %I:%M %p"))  // Day and Time format
+            .ticks(5));
 
-            svgLineHandsWashed.append("g")
-                .attr("class", "y axis")
-                .call(d3.axisLeft(yScaleLineHandsWashed));
+    svgLineHandsWashed.append("g")
+        .attr("class", "y axis")
+        .call(d3.axisLeft(yScaleLineHandsWashed));
 
-            svgLineHandsWashed.append("text")
-                .attr("class", "x-axis-label")
-                .attr("transform", `translate(${width / 2},${height + margin.bottom - 5})`)
-                .style("text-anchor", "middle")
-                .text("Time");
+    svgLineHandsWashed.append("text")
+        .attr("class", "x-axis-label")
+        .attr("transform", `translate(${width / 2},${height + margin.bottom - 5})`)
+        .style("text-anchor", "middle")
+        .text("Time");
 
-            svgLineHandsWashed.append("text")
-                .attr("class", "y-axis-label")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -margin.left + 15)
-                .attr("x", -height / 2)
-                .style("text-anchor", "middle")
-                .text("Hands Washed");
+    svgLineHandsWashed.append("text")
+        .attr("class", "y-axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -margin.left + 15)
+        .attr("x", -height / 2)
+        .style("text-anchor", "middle")
+        .text("Hands Washed");
 
-            // Line Chart for Water Dispensed
-            const yScaleLineWaterDispensed = d3.scaleLinear()
-                .domain([0, d3.max(waterDispensedData)])
-                .range([height, 0]);
+    // Line Chart for Water Dispensed
+    const yScaleLineWaterDispensed = d3.scaleLinear()
+        .domain([0, d3.max(waterDispensedData)])
+        .range([height, 0]);
 
-            const lineWaterDispensed = d3.line()
-                .x((d, i) => xScaleLine(timestamps[i]))
-                .y(d => yScaleLineWaterDispensed(d));
+    const lineWaterDispensed = d3.line()
+        .x((d, i) => xScaleLine(timestamps[i]))
+        .y(d => yScaleLineWaterDispensed(d));
 
-            const svgLineWaterDispensed = d3.select("#water-dispensed-line svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+    const svgLineWaterDispensed = d3.select("#water-dispensed-line svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            svgLineWaterDispensed.append("path")
-                .datum(waterDispensedData)
-                .attr("class", "line")
-                .attr("d", lineWaterDispensed)
-                .style("stroke", "green");
+    svgLineWaterDispensed.append("path")
+        .datum(waterDispensedData)
+        .attr("class", "line-water-dispensed")  // Added class for styling
+        .attr("d", lineWaterDispensed);
 
-            svgLineWaterDispensed.append("g")
-                .attr("class", "x axis")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScaleLine)
-                    .tickFormat(d3.timeFormat("%a %I:%M %p"))  // Day and Time format
-                    .ticks(5));
+    svgLineWaterDispensed.append("g")
+        .attr("class", "x axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScaleLine)
+            .tickFormat(d3.timeFormat("%a %I:%M %p"))  // Day and Time format
+            .ticks(5));
 
-            svgLineWaterDispensed.append("g")
-                .attr("class", "y axis")
-                .call(d3.axisLeft(yScaleLineWaterDispensed));
+    svgLineWaterDispensed.append("g")
+        .attr("class", "y axis")
+        .call(d3.axisLeft(yScaleLineWaterDispensed));
 
-            svgLineWaterDispensed.append("text")
-                .attr("class", "x-axis-label")
-                .attr("transform", `translate(${width / 2},${height + margin.bottom - 5})`)
-                .style("text-anchor", "middle")
-                .text("Time");
+    svgLineWaterDispensed.append("text")
+        .attr("class", "x-axis-label")
+        .attr("transform", `translate(${width / 2},${height + margin.bottom - 5})`)
+        .style("text-anchor", "middle")
+        .text("Time");
 
-            svgLineWaterDispensed.append("text")
-                .attr("class", "y-axis-label")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -margin.left + 15)
-                .attr("x", -height / 2)
-                .style("text-anchor", "middle")
-                .text("Water Dispensed (ml)");
+    svgLineWaterDispensed.append("text")
+        .attr("class", "y-axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -margin.left + 15)
+        .attr("x", -height / 2)
+        .style("text-anchor", "middle")
+        .text("Water Dispensed (ml)");
 
-            // Histogram for Hands Washed
-            const xScaleHistogramHandsWashed = d3.scaleLinear()
-                .domain([0, d3.max(handsWashedData)])
-                .range([0, width]);
+    // Histogram for Hands Washed
+    const xScaleHistogramHandsWashed = d3.scaleLinear()
+        .domain([0, d3.max(handsWashedData)])
+        .range([0, width]);
 
-            const histogramHandsWashed = d3.histogram()
-                .domain(xScaleHistogramHandsWashed.domain())
-                .thresholds(xScaleHistogramHandsWashed.ticks(10));
+    const histogramHandsWashed = d3.histogram()
+        .domain(xScaleHistogramHandsWashed.domain())
+        .thresholds(xScaleHistogramHandsWashed.ticks(10));
 
-            const binsHandsWashed = histogramHandsWashed(handsWashedData);
+    const binsHandsWashed = histogramHandsWashed(handsWashedData);
 
-            const yScaleHistogramHandsWashed = d3.scaleLinear()
-                .domain([0, d3.max(binsHandsWashed, d => d.length)])
-                .range([height, 0]);
+    const yScaleHistogramHandsWashed = d3.scaleLinear()
+        .domain([0, d3.max(binsHandsWashed, d => d.length)])
+        .range([height, 0]);
 
-            const svgHistogramHandsWashed = d3.select("#hands-washed-histogram svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+    const svgHistogramHandsWashed = d3.select("#hands-washed-histogram svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            svgHistogramHandsWashed.selectAll(".bar")
-                .data(binsHandsWashed)
-                .enter().append("rect")
-                .attr("class", "bar")
-                .attr("x", d => xScaleHistogramHandsWashed(d.x0))
-                .attr("y", d => yScaleHistogramHandsWashed(d.length))
-                .attr("width", d => xScaleHistogramHandsWashed(d.x1) - xScaleHistogramHandsWashed(d.x0) - 1)
-                .attr("height", d => height - yScaleHistogramHandsWashed(d.length));
+    svgHistogramHandsWashed.selectAll(".bar")
+        .data(binsHandsWashed)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", d => xScaleHistogramHandsWashed(d.x0))
+        .attr("y", d => yScaleHistogramHandsWashed(d.length))
+        .attr("width", d => xScaleHistogramHandsWashed(d.x1) - xScaleHistogramHandsWashed(d.x0) - 1)
+        .attr("height", d => height - yScaleHistogramHandsWashed(d.length))
+        .style("fill", "steelblue");
 
-            svgHistogramHandsWashed.append("g")
-                .attr("class", "x axis")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScaleHistogramHandsWashed).ticks(5));
+    svgHistogramHandsWashed.append("g")
+        .attr("class", "x axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScaleHistogramHandsWashed));
 
-            svgHistogramHandsWashed.append("g")
-                .attr("class", "y axis")
-                .call(d3.axisLeft(yScaleHistogramHandsWashed));
+    svgHistogramHandsWashed.append("g")
+        .attr("class", "y axis")
+        .call(d3.axisLeft(yScaleHistogramHandsWashed));
 
-            svgHistogramHandsWashed.append("text")
-                .attr("class", "x-axis-label")
-                .attr("transform", `translate(${width / 2},${height + margin.bottom - 5})`)
-                .style("text-anchor", "middle")
-                .text("Hands Washed");
+    svgHistogramHandsWashed.append("text")
+        .attr("class", "x-axis-label")
+        .attr("transform", `translate(${width / 2},${height + margin.bottom - 5})`)
+        .style("text-anchor", "middle")
+        .text("Hands Washed");
 
-            svgHistogramHandsWashed.append("text")
-                .attr("class", "y-axis-label")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -margin.left + 15)
-                .attr("x", -height / 2)
-                .style("text-anchor", "middle")
-                .text("Frequency");
+    svgHistogramHandsWashed.append("text")
+        .attr("class", "y-axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -margin.left + 15)
+        .attr("x", -height / 2)
+        .style("text-anchor", "middle")
+        .text("Count");
 
-            // Histogram for Water Dispensed
-            const xScaleHistogramWaterDispensed = d3.scaleLinear()
-                .domain([0, d3.max(waterDispensedData)])
-                .range([0, width]);
+    // Histogram for Water Dispensed
+    const xScaleHistogramWaterDispensed = d3.scaleLinear()
+        .domain([0, d3.max(waterDispensedData)])
+        .range([0, width]);
 
-            const histogramWaterDispensed = d3.histogram()
-                .domain(xScaleHistogramWaterDispensed.domain())
-                .thresholds(xScaleHistogramWaterDispensed.ticks(10));
+    const histogramWaterDispensed = d3.histogram()
+        .domain(xScaleHistogramWaterDispensed.domain())
+        .thresholds(xScaleHistogramWaterDispensed.ticks(10));
 
-            const binsWaterDispensed = histogramWaterDispensed(waterDispensedData);
+    const binsWaterDispensed = histogramWaterDispensed(waterDispensedData);
+    const yScaleHistogramWaterDispensed = d3.scaleLinear()
+        .domain([0, d3.max(binsWaterDispensed, d => d.length)])
+        .range([height, 0]);
 
-            const yScaleHistogramWaterDispensed = d3.scaleLinear()
-                .domain([0, d3.max(binsWaterDispensed, d => d.length)])
-                .range([height, 0]);
+    const svgHistogramWaterDispensed = d3.select("#water-dispensed-histogram svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            const svgHistogramWaterDispensed = d3.select("#water-dispensed-histogram svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+    svgHistogramWaterDispensed.selectAll(".bar")
+        .data(binsWaterDispensed)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", d => xScaleHistogramWaterDispensed(d.x0))
+        .attr("y", d => yScaleHistogramWaterDispensed(d.length))
+        .attr("width", d => xScaleHistogramWaterDispensed(d.x1) - xScaleHistogramWaterDispensed(d.x0) - 1)
+        .attr("height", d => height - yScaleHistogramWaterDispensed(d.length))
+        .style("fill", "green");
 
-            svgHistogramWaterDispensed.selectAll(".bar")
-                .data(binsWaterDispensed)
-                .enter().append("rect")
-                .attr("class", "bar")
-                .attr("x", d => xScaleHistogramWaterDispensed(d.x0))
-                .attr("y", d => yScaleHistogramWaterDispensed(d.length))
-                .attr("width", d => xScaleHistogramWaterDispensed(d.x1) - xScaleHistogramWaterDispensed(d.x0) - 1)
-                .attr("height", d => height - yScaleHistogramWaterDispensed(d.length));
+    svgHistogramWaterDispensed.append("g")
+        .attr("class", "x axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScaleHistogramWaterDispensed));
 
-            svgHistogramWaterDispensed.append("g")
-                .attr("class", "x axis")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScaleHistogramWaterDispensed).ticks(5));
+    svgHistogramWaterDispensed.append("g")
+        .attr("class", "y axis")
+        .call(d3.axisLeft(yScaleHistogramWaterDispensed));
 
-            svgHistogramWaterDispensed.append("g")
-                .attr("class", "y axis")
-                .call(d3.axisLeft(yScaleHistogramWaterDispensed));
+    svgHistogramWaterDispensed.append("text")
+        .attr("class", "x-axis-label")
+        .attr("transform", `translate(${width / 2},${height + margin.bottom - 5})`)
+        .style("text-anchor", "middle")
+        .text("Water Dispensed (ml)");
 
-            svgHistogramWaterDispensed.append("text")
-                .attr("class", "x-axis-label")
-                .attr("transform", `translate(${width / 2},${height + margin.bottom - 5})`)
-                .style("text-anchor", "middle")
-                .text("Water Dispensed (ml)");
+    svgHistogramWaterDispensed.append("text")
+        .attr("class", "y-axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -margin.left + 15)
+        .attr("x", -height / 2)
+        .style("text-anchor", "middle")
+        .text("Count");
+});
 
-            svgHistogramWaterDispensed.append("text")
-                .attr("class", "y-axis-label")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -margin.left + 15)
-                .attr("x", -height / 2)
-                .style("text-anchor", "middle")
-                .text("Frequency");
-           
-        });
-    </script>
+</script>
+
 </body>
 </html>

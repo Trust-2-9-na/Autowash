@@ -3,8 +3,11 @@ from django.contrib.auth.models import User
 from .models import UserProfile, SystemSettings, SystemStatus, SensorData
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
-
+from django import forms
+from django.contrib.auth.forms import AuthenticationForm
+import re
 # Signup form for new users
+
 class SignupForm(UserCreationForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
@@ -21,12 +24,27 @@ class SignupForm(UserCreationForm):
 
     def clean_password1(self):
         password1 = self.cleaned_data.get('password1')
+
+        # Password must be at least 8 characters long
         if len(password1) < 8:
             raise ValidationError('Password must be at least 8 characters long.')
+
+        # Password must contain at least one digit
         if not any(char.isdigit() for char in password1):
             raise ValidationError('Password must contain at least one digit.')
-        if not any(char.isalpha() for char in password1):
-            raise ValidationError('Password must contain at least one letter.')
+
+        # Password must contain at least one uppercase letter
+        if not any(char.isupper() for char in password1):
+            raise ValidationError('Password must contain at least one uppercase letter.')
+
+        # Password must contain at least one lowercase letter
+        if not any(char.islower() for char in password1):
+            raise ValidationError('Password must contain at least one lowercase letter.')
+
+        # Password must contain at least one special character
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password1):
+            raise ValidationError('Password must contain at least one special character.')
+
         return password1
 
     def clean(self):
@@ -34,6 +52,7 @@ class SignupForm(UserCreationForm):
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
 
+        # Check if the passwords match
         if password1 and password2 and password1 != password2:
             raise ValidationError('Passwords do not match.')
 
@@ -73,4 +92,15 @@ class SystemStatusForm(forms.ModelForm):
             'anomaly_detected': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'anomaly_description': forms.Textarea(attrs={'class': 'form-control'}),
         }
+
+
+class CustomAuthenticationForm(AuthenticationForm):
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if not username or not password:
+            raise forms.ValidationError('Please enter both username and password.')
+
+        return super().clean()
 

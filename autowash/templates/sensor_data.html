@@ -1,54 +1,79 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor Data</title>
-    <link rel="stylesheet" href="{% static 'css/sensor_data.css' %}">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/sensor-data.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
     <script src="{% static 'js/sensor_data.js' %}" defer></script>
 </head>
 <body>
-    <header>
-        <h1>AUTOWASH</h1>
-
-        <!-- Navigation bar -->
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
-                <li><a href="{% url 'system-status' %}" class="{% if request.resolver_match.url_name == 'system-status' %}active{% endif %}">System Status</a></li>
-                <li><a href="{% url 'system_settings' %}" class="{% if request.resolver_match.url_name == 'system-settings' %}active{% endif %}">System Settings</a></li>
-                <li><a href="{% url 'sensor-data' %}" class="{% if request.resolver_match.url_name == 'sensor-data' %}active{% endif %}">Sensor Data</a></li>
-                <li><a href="{% url 'user-profile' %}" class="{% if request.resolver_match.url_name == 'user-profile' %}active{% endif %}">User Profile</a></li>
-            </ul>
-        </nav>
-        <div class="sign-out">
-            <a href="{% url 'signout' %}" class="signout-btn">Sign Out</a>
+    <!-- Header with Navigation -->
+    <header class="bg-light py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">AUTOWASH</h4>
+                <!-- Navigation bar -->
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item">
+                                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'system-status' %}" class="nav-link {% if request.resolver_match.url_name == 'system-status' %}active{% endif %}">System Status</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'system-settings' %}" class="nav-link {% if request.resolver_match.url_name == 'system-settings' %}active{% endif %}">System Settings</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'sensor-data' %}" class="nav-link {% if request.resolver_match.url_name == 'sensor-data' %}active{% endif %}">Sensor Data</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'user-profile' %}" class="nav-link {% if request.resolver_match.url_name == 'user-profile' %}active{% endif %}">User Profile</a>
+                            </li>
+                        </ul>
+                        <a href="{% url 'signout' %}" class="btn btn-outline-danger">Sign Out</a>
+                    </div>
+                </nav>
+            </div>
         </div>
     </header>
 
-    <div class="container">
-        <div class="header">
-            <h2>Sensor Data</h2>
-            <div class="header-actions">
-                <a href="{% url 'sensor-charts' %}">View Sensor Charts</a>
-                <a href="{% url 'average-sensor' %}">View Average Sensor Data</a>
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Header Section -->
+        <div class="row mb-3">
+            <div class="col-12 col-md-6">
+                <h2>Sensor Data</h2>
+            </div>
+            <div class="col-12 col-md-6 text-md-right">
+                <a href="{% url 'sensor-charts' %}" class="btn btn-primary mr-2 mb-2 mb-md-0">View Sensor Charts</a>
+                <a href="{% url 'average-sensor' %}" class="btn btn-secondary">View Average Sensor Data</a>
             </div>
         </div>
 
+        <!-- Messages Section -->
         {% if messages %}
-            <div class="messages">
+            <div class="alert alert-info">
                 {% for message in messages %}
                     <div class="{{ message.tags }}">{{ message }}</div>
                 {% endfor %}
             </div>
         {% endif %}
 
+        <!-- Sensor Data Table -->
         <h3>Current Sensor Readings</h3>
-        <div class="table-wrapper">
-            <table class="sensor-data-table">
-                <thead>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped sensor-data-table">
+                <thead class="thead-dark">
                     <tr>
                         <th>Timestamp</th>
                         <th>Hands Washed</th>
@@ -60,21 +85,29 @@
                 <tbody>
                     {% for data in sensor_data %}
                     <tr>
-                        <td>{{ data.timestamp }}</td>
-                        <td>{{ data.hands_washed }}</td>
-                        <td>{{ data.water_dispensed_ml }}</td>
-                        <td>{{ data.current_water_volume_ml }}</td>
-                        <td>{{ data.ir_sensor_detected|yesno:"Yes,No" }}</td>
+                        <td data-label="Timestamp">{{ data.timestamp }}</td>
+                        <td data-label="Hands Washed">{{ data.hands_washed }}</td>
+                        <td data-label="Water Dispensed (ml)">{{ data.water_dispensed_ml }}</td>
+                        <td data-label="Current Water Volume (ml)">{{ data.current_water_volume_ml }}</td>
+                        <td data-label="IR Sensor Detected">{{ data.ir_sensor_detected|yesno:"Yes,No" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <div class="summary">
-            <p>Total Records: {{ sensor_data.count }}</p>
+        <!-- Summary Section -->
+        <div class="text-right mt-3">
+            <p class="font-weight-bold" style="color: blue;">Total Records: {{ sensor_data.count }}</p>
         </div>
     </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Custom JavaScript for Sorting Table -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // Table sorting functionality
@@ -91,21 +124,14 @@
             }
 
             function sortTable(table, columnIndex) {
-                const rows = Array.from(table.querySelector("tbody").children);
+                const rows = Array.from(table.querySelectorAll("tbody tr"));
                 const sortedRows = rows.sort((a, b) => {
-                    const aText = a.children[columnIndex].textContent.trim();
-                    const bText = b.children[columnIndex].textContent.trim();
-
-                    // Handle boolean sorting for IR Sensor Detected
-                    if (columnIndex === 4) { // Assuming IR Sensor Detected is the 5th column
-                        return (aText === "Yes" ? 1 : -1) - (bText === "Yes" ? 1 : -1);
-                    }
-
-                    // Handle numeric sorting for other fields
-                    return aText.localeCompare(bText, undefined, { numeric: true });
+                    const aText = a.children[columnIndex].innerText;
+                    const bText = b.children[columnIndex].innerText;
+                    return aText.localeCompare(bText);
                 });
 
-                table.querySelector("tbody").append(...sortedRows);
+                sortedRows.forEach(row => table.querySelector("tbody").appendChild(row));
             }
         });
     </script>

@@ -1,103 +1,129 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Status</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="{% static 'css/system_status.css' %}">
 </head>
 <body>
-    <header>
-        <h1>AUTOWASH</h1>
-        <!-- Navigation bar -->
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
-                <li><a href="{% url 'system-status' %}" class="{% if request.resolver_match.url_name == 'system-status' %}active{% endif %}">System Status</a></li>
-                <li><a href="{% url 'system_settings' %}" class="{% if request.resolver_match.url_name == 'system-settings' %}active{% endif %}">System Settings</a></li>
-                <li><a href="{% url 'sensor-data' %}" class="{% if request.resolver_match.url_name == 'sensor-data' %}active{% endif %}">Sensor Data</a></li>
-                <li><a href="{% url 'user-profile' %}" class="{% if request.resolver_match.url_name == 'user-profile' %}active{% endif %}">User Profile</a></li>
-            </ul>
-        </nav>
-        <!-- Sign Out Button -->
-        <div class="sign-out">
-            <a href="{% url 'signout' %}" class="signout-btn">Sign Out</a>
+    <!-- Header Section -->
+    <header class="bg-light py-3">
+        <div class="container">
+            <div class="row justify-content-between align-items-center">
+                <div class="col-6 col-md-4">
+                    <h4 class="mb-0">AUTOWASH</h4>
+                </div>
+                <div class="col-6 col-md-8 text-right">
+                    <nav class="navbar navbar-expand-lg navbar-light">
+                        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarNav">
+                            <ul class="navbar-nav mr-auto">
+                                <li class="nav-item">
+                                    <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'system-status' %}" class="nav-link {% if request.resolver_match.url_name == 'system-status' %}active{% endif %}">System Status</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'system-settings' %}" class="nav-link {% if request.resolver_match.url_name == 'system-settings' %}active{% endif %}">System Settings</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'sensor-data' %}" class="nav-link {% if request.resolver_match.url_name == 'sensor-data' %}active{% endif %}">Sensor Data</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'user-profile' %}" class="nav-link {% if request.resolver_match.url_name == 'user-profile' %}active{% endif %}">User Profile</a>
+                                </li>
+                            </ul>
+                            <a href="{% url 'signout' %}" class="btn btn-outline-danger">Sign Out</a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
         </div>
     </header>
-    <div class="container">
+
+    <!-- Main Content Section -->
+    <div class="container mt-4">
         <h2>System Status</h2>
         {% if messages %}
-            <div class="messages">
+            <div class="alert alert-info">
                 {% for message in messages %}
-                    <div class="{{ message.tags }}">{{ message }}</div>
+                    <div class="message">{{ message }}</div>
                 {% endfor %}
             </div>
         {% endif %}
-        <!-- Table for system status -->
-        <div class="table-wrapper">
-            <table class="status-table">
-                <thead>
-                    <tr>
-                        <th>Parameter</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Water Level (cm)</td>
-                        <td id="water_level">{{ system_status.water_level }}</td>
-                    </tr>
-                    <tr>
-                        <td>Ultrasonic Distance (cm)</td>
-                        <td id="ultrasonic_distance_cm">{{ system_status.ultrasonic_distance_cm }}</td>
-                    </tr>
-                    <tr>
-                        <td>Operational State</td>
-                        <td id="operational_state">{{ system_status.operational_state }}</td>
-                    </tr>
-                    <tr>
-                        <td>Anomaly Detected</td>
-                        <td id="anomaly_detected">{{ system_status.anomaly_detected|yesno:"Yes,No" }}</td>
-                    </tr>
-                    <tr>
-                        <td>Anomaly Description</td>
-                        <td id="anomaly_description">{{ system_status.anomaly_description }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <button id="updateStatusButton" type="button">Update Status</button>
+
+        <!-- Table for System Status -->
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody style="color: slategrey;">
+                <tr>
+                    <td><strong>Water Level</strong></td>
+                    <td><span id="water-level">Loading...</span> cm</td>
+                </tr>
+                <tr>
+                    <td><strong>Ultrasonic Distance</strong></td>
+                    <td><span id="ultrasonic-distance">Loading...</span> cm</td>
+                </tr>
+                <tr>
+                    <td><strong>Operational State</strong></td>
+                    <td><span id="operational-state">Loading...</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Anomaly Detected</strong></td>
+                    <td><span id="anomaly-detected">Loading...</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Anomaly Description</strong></td>
+                    <td><span id="anomaly-description">Loading...</span></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
+    <!-- JavaScript to fetch and update system status dynamically -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('updateStatusButton').addEventListener('click', function() {
-                fetch('/status-endpoint', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    document.getElementById('water_level').textContent = data.water_level;
-                    document.getElementById('ultrasonic_distance_cm').textContent = data.ultrasonic_distance_cm;
-                    document.getElementById('operational_state').textContent = data.operational_state;
-                    document.getElementById('anomaly_detected').textContent = data.anomaly_detected ? "Yes" : "No";
-                    document.getElementById('anomaly_description').textContent = data.anomaly_description || "None";
-                })
-                .catch(error => console.error('Error fetching status data:', error));
-            });
-        });
+        function refreshSystemStatus() {
+            fetch("{% url 'system-status' %}", {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'  // For AJAX request
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                } else {
+                    document.getElementById('water-level').textContent = data.water_level;
+                    document.getElementById('ultrasonic-distance').textContent = data.ultrasonic_distance_cm;
+                    document.getElementById('operational-state').textContent = data.operational_state;
+                    document.getElementById('anomaly-detected').textContent = data.anomaly_detected ? "Yes" : "No";
+                    document.getElementById('anomaly-description').textContent = data.anomaly_description || "None";
+                }
+            })
+            .catch(error => console.error('Error fetching status:', error));
+        }
+
+        // Auto-refresh every 5 seconds
+        setInterval(refreshSystemStatus, 5000);
+
+        // Initial load
+        window.onload = refreshSystemStatus;
     </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-              

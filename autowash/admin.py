@@ -11,12 +11,12 @@ class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'address', 'phone_number')
 
 class SystemSettingsAdmin(admin.ModelAdmin):
-    list_display = ('flow_speed', 'duration')  
+    list_display = ('dispensing_time', 'speed_value')  
 
 class SystemStatusAdmin(admin.ModelAdmin):
-    list_display = ('user', 'water_level', 'ultrasonic_distance_cm', 'operational_state', 'anomaly_detected', 'anomaly_description')  # Updated field names
-    list_editable = ('water_level', 'operational_state', 'anomaly_detected', 'anomaly_description')  # Updated field names
-    actions = []  
+    list_display = ('water_level', 'operational_state', 'anomaly_detected', 'anomaly_description')
+    list_editable = ('water_level',)
+    list_display_links = ('operational_state',)  
 
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(SensorData, SensorDataAdmin)

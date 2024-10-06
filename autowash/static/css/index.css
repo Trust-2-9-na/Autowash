@@ -1,111 +1,109 @@
-body {
+/* Style header */
+header {
+    background-color: white;
+    color: black;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h4 {
+    font-weight: bold;
     margin: 0;
-    font-family: Arial, sans-serif;
+}
+
+/* Style the navbar */
+.navbar {
+    background-color: white;
+}
+
+.navbar .nav-link, .navbar .navbar-brand {
+    color: black;
+}
+
+.navbar .nav-link.active {
+    font-weight: bold;
+}
+
+.navbar .btn-outline-danger {
+    padding: 3px 8px;  /* Reduced padding for smaller button size */
+    font-size: 0.875rem;  /* Smaller font size */
+    border-width: 1px;  /* Thinner border */
+}
+
+.navbar .btn-outline-danger:hover {
+    background-color: blue;
+    color: white;
+}
+
+/* Main content styling */
+.container {
+    margin-top: 20px;
+}
+
+#banner {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+#banner h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+#banner p {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+/* Footer styling */
+footer {
+    background-color: white;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    height: 50px; /* Reduced height */
+    position: relative;
+    bottom: 0;
+}
+
+.footer-buttons .btn {
+    margin: 10px;
+    padding: 8px 12px; /* Reduced padding */
+    background-color: #007bff; /* Blue background color */
+    color: white;
+    border: none;
+}
+
+.footer-buttons .btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Ensure the main content takes up the remaining space */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
 }
 
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(to right, #00f, #0ff, #00f); /* Gradient background */
-    padding: 10px 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-}
-
-.header-title {
-    font-size: 1.5rem;
-    margin-left: 10px;
-}
-
-.icon {
-    width: 40px;
-    height: 40px;
-}
-
-.header-center {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-}
-
-.top-nav {
-    display: flex;
-    gap: 20px;
-}
-
-.nav-link {
-    color: white; /* Updated to ensure visibility on gradient background */
-    text-decoration: none;
-    font-weight: bold;
-    padding: 10px;
-    transition: color 0.3s;
-}
-
-.nav-link:hover {
-    color: #007BFF;
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-}
-
-.signout-btn {
-    text-decoration: none;
-    color: white;
-    font-size: 1em;
-    background-color: transparent;
-    border: 1px solid white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.signout-btn:hover {
-    background-color: black;
-    color: white;
-}
-
-.banner {
-    text-align: center;
-    padding: 50px;
-}
-
-.main-content {
-    padding: 20px;
+main {
     flex: 1;
 }
 
-.footer-buttons {
-    display: flex;
-    justify-content: center;
-    padding: 20px;
-    background-color: #f8f9fa;
-    margin-top: auto;
-}
-
-.btn {
-    margin: 0 10px;
-    padding: 10px 20px;
-    background-color: white;
-    color: black;
-    border: 1px solid #007BFF;
-    text-decoration: none;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.btn:hover {
-    background-color: #007BFF;
-    color: white;
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .navbar-expand-lg .navbar-collapse {
+        flex-direction: column;
+        align-items: start;
+    }
+    .btn {
+        width: 100%; /* Make buttons full-width on small screens */
+        margin-bottom: 5px;
+    }
+    .footer-buttons .btn {
+        width: 100%; /* Make footer buttons full-width on small screens */
+        margin-bottom: 5px;
+    }
 }

@@ -1,54 +1,79 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Home{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="header-left">
-            <img src="{% static 'images/icons/autowash_icon.png' %}" alt="Auto Wash Icon" class="icon">
-            <span class="header-title">AUTOWASH</span>
-        </div>
-        <div class="header-center">
-            <!-- Top navigation bar -->
-            <nav class="top-nav">
-                <a href="{% url 'system-status' %}" class="nav-link">System Status</a>
-                <a href="{% url 'user-profile' %}" class="nav-link">User Profile</a>
-                <a href="{% url 'system_settings' %}" class="nav-link">System Settings</a>
-                <a href="{% url 'sensor-data' %}" class="nav-link">Sensor Data</a>
-            </nav>
-        </div>
-        <div class="header-right">
-            <a href="{% url 'signout' %}" class="signout-btn">Sign Out</a>
+    <header class="bg-light py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">AUTOWASH</h4>
+                <!-- Navigation bar -->
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item">
+                                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'system-status' %}" class="nav-link {% if request.resolver_match.url_name == 'system-status' %}active{% endif %}">System Status</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'system-settings' %}" class="nav-link {% if request.resolver_match.url_name == 'system-settings' %}active{% endif %}">System Settings</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'sensor-data' %}" class="nav-link {% if request.resolver_match.url_name == 'sensor-data' %}active{% endif %}">Sensor Data</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'user-profile' %}" class="nav-link {% if request.resolver_match.url_name == 'user-profile' %}active{% endif %}">User Profile</a>
+                            </li>
+                        </ul>
+                        <a href="{% url 'signout' %}" class="btn btn-outline-danger">Sign Out</a>
+                    </div>
+                </nav>
+            </div>
         </div>
     </header>
 
-    <!-- Main content -->
-    <div class="main-content">
-        <section id="banner" class="banner">
+    <!-- Main Content -->
+    <main class="container mt-4">
+        <section id="banner" class="text-center mb-4">
             <h1>Welcome to Autowash</h1>
             <p>Your Ultimate Automatic Handwashing Solution</p>
             <p>Experience cleanliness and safety like never before!</p>
         </section>
-    </div>
+    </main>
 
     <!-- Footer -->
-    <footer>
-        <div class="footer-buttons">
-            <a href="{% url 'help' %}" class="btn">Help</a>
-            <a href="{% url 'contact' %}" class="btn">Contact Us</a>
-            <a href="{% url 'about' %}" class="btn">About</a>
+    <footer class="bg-light py-3">
+        <div class="container text-center">
+            <div class="footer-buttons">
+                <a href="{% url 'help' %}" class="btn">Help</a>
+                <a href="{% url 'contact' %}" class="btn">Contact Us</a>
+                <a href="{% url 'about' %}" class="btn">About</a>
+            </div>
         </div>
     </footer>
 
-    <!-- JavaScript for Navigation Carousel -->
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Custom JS for Carousel -->
     <script>
         let currentIndex = 0;
         const items = document.querySelectorAll('.carousel-item');
@@ -60,12 +85,12 @@
             });
         }
 
-        document.getElementById('next-page').addEventListener('click', () => {
+        document.getElementById('next-page')?.addEventListener('click', () => {
             currentIndex = (currentIndex + 1) % totalItems;
             showItem(currentIndex);
         });
 
-        document.getElementById('prev-page').addEventListener('click', () => {
+        document.getElementById('prev-page')?.addEventListener('click', () => {
             currentIndex = (currentIndex - 1 + totalItems) % totalItems;
             showItem(currentIndex);
         });

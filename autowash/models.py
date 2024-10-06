@@ -27,7 +27,7 @@ class UserProfile(models.Model):
         return self.user.username
 
 class SensorData(models.Model):
-    timestamp = models.DateTimeField(default=timezone.now)
+    timestamp = models.DateTimeField(auto_now_add=True)
     hands_washed = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     water_dispensed_ml = models.FloatField(default=0.0)
     current_water_volume_ml = models.FloatField()
@@ -37,7 +37,6 @@ class SensorData(models.Model):
     def __str__(self):
         return (f"{self.timestamp} - Hands: {self.hands_washed}, Water Dispensed: {self.water_dispensed_ml}ml, "
                 f"Current Water Volume: {self.current_water_volume_ml}ml, IR Detected: {self.ir_sensor_detected}")
-
 @receiver(post_save, sender=SensorData)
 def update_water_dispensed(sender, instance, **kwargs):
     try:
@@ -48,73 +47,44 @@ def update_water_dispensed(sender, instance, **kwargs):
             # Calculate the water dispensed only if the volume decreases
             if previous_reading.current_water_volume_ml > instance.current_water_volume_ml:
                 water_dispensed = previous_reading.current_water_volume_ml - instance.current_water_volume_ml
-                instance.water_dispensed_ml = water_dispensed
+                if instance.hands_washed > 0:
+                    instance.ir_sensor_detected = True
+                else:
+                    instance.ir_sensor_detected = False
+
+                # Avoid saving if values are unchanged
+                if instance.water_dispensed_ml != water_dispensed or instance.last_known_volume_ml != instance.current_water_volume_ml:
+                    instance.water_dispensed_ml = water_dispensed
+                    instance.last_known_volume_ml = instance.current_water_volume_ml
+                    instance.save(update_fields=['water_dispensed_ml', 'last_known_volume_ml'])
             else:
                 # If water is added, set water_dispensed_ml to 0
-                instance.water_dispensed_ml = 0.0
-
-            # Update the last known volume
-            instance.last_known_volume_ml = instance.current_water_volume_ml
-            instance.save(update_fields=['water_dispensed_ml', 'last_known_volume_ml'])
+                if instance.water_dispensed_ml != 0.0 or instance.last_known_volume_ml != instance.current_water_volume_ml:
+                    instance.water_dispensed_ml = 0.0
+                    instance.last_known_volume_ml = instance.current_water_volume_ml
+                    instance.save(update_fields=['water_dispensed_ml', 'last_known_volume_ml'])
         else:
             # Handle case where there is no previous reading
-            instance.water_dispensed_ml = 0.0
-            instance.last_known_volume_ml = instance.current_water_volume_ml
-            instance.save(update_fields=['water_dispensed_ml', 'last_known_volume_ml'])
+            if instance.water_dispensed_ml != 0.0 or instance.last_known_volume_ml != instance.current_water_volume_ml:
+                instance.water_dispensed_ml = 0.0
+                instance.last_known_volume_ml = instance.current_water_volume_ml
+                instance.save(update_fields=['water_dispensed_ml', 'last_known_volume_ml'])
     except Exception as e:
-        # Log the error or handle it as needed
-        print(f"Error updating water dispensed: {e}")
-
-
-from django.db import models
-
-DURATION_CHOICES = [
-    (5000, '5 seconds'),
-    (10000, '10 seconds'),
-    (15000, '15 seconds'),
-    (20000, '20 seconds'),
-    (25000, '25 seconds'),
-    (30000, '30 seconds'),
-    (35000, '35 seconds'),
-    (40000, '40 seconds'),
-]
+        # Log the error
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error updating water dispensed: {e}")
 
 class SystemSettings(models.Model):
-    flow_speed = models.IntegerField(
-        choices=[(0, '0'), (64, '64'), (85, '85'), (100, '100'), (120, '120'), (128, '128'), (160, '160'), (190, '190'), (220, '220'), (240, '240'), (255, '255')],
-        verbose_name="Flow Speed",
-        help_text="Select a flow speed from the predefined choices."
-    )
-    duration = models.IntegerField(
-        choices=DURATION_CHOICES,
-        verbose_name="Duration",
-        help_text="Select a duration in milliseconds from the predefined choices.",
-        default=5000  # Default value
-    )
-    
-    def set_flow_speed(self, speed):
-        valid_speeds = [0, 64, 85, 100, 120, 128, 160, 190, 220, 240, 255]
-        if speed in valid_speeds:
-            self.flow_speed = speed
-        else:
-            raise ValueError("Invalid flow speed")
+    # Fields to store the index of dispensing times and speed values
+    dispensing_time = models.IntegerField(default=0)
+    speed_value = models.IntegerField(default=0)
 
-    def set_duration(self, duration):
-        valid_durations = [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000]
-        if duration in valid_durations:
-            self.duration = duration
-        else:
-            raise ValueError("Invalid duration. Must be one of: 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000 milliseconds")
-
-    def apply_settings(self):
-        # Convert duration from milliseconds to seconds
-        duration_in_seconds = self.duration / 1000
-        # Code to send settings to hardware
-        print(f"Applying settings: Flow Speed = {self.flow_speed}, Duration = {duration_in_seconds} seconds")
+    def __str__(self):
+        return f"Settings: Time Index {self.dispensing_time}, Speed Index {self.speed_value}"
 
 
 class SystemStatus(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     water_level = models.FloatField(default=0.0)
     ultrasonic_distance_cm = models.FloatField(null=True, blank=True)
     operational_state = models.CharField(
@@ -123,6 +93,7 @@ class SystemStatus(models.Model):
             ('Normal', 'Normal'),
             ('Maintenance Required', 'Maintenance Required'),
         ],
+        default='Normal',  
         null=True,
         blank=True
     )
@@ -130,7 +101,7 @@ class SystemStatus(models.Model):
     anomaly_description = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return (f"{self.user.username} Status - Water Level: {self.water_level}cm, "
+        return (f"Status - Water Level: {self.water_level}cm, "
                 f"Ultrasonic Distance: {self.ultrasonic_distance_cm}cm, "
                 f"Operational State: {self.operational_state}, "
                 f"Anomaly: {'Yes' if self.anomaly_detected else 'No'}, "
